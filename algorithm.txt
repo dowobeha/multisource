@@ -1,0 +1,61 @@
+initialize empty queue
+initialize empty trie
+add trie root node to queue
+
+for each language l
+	collect translation options t[l] for sentence in language l
+end for
+
+
+while queue not empty
+
+	start_node = queue.dequeue	
+
+	for each language l
+
+		if start_node can be legally extended in language l
+	
+			node = start_node
+	
+			for each translation option o in t[l]
+		
+				if o's source l coverage vector can legally extend node
+		
+					for each target word w in o
+			
+						node = expand_trie(node,w)
+			
+						annotate node as reachable using l
+			
+					end for
+			
+					annotate node with o's source l coverage vector
+				
+				end if 
+		
+			end for
+			
+		end if
+	
+	end for
+
+
+	pruning_children:
+	for each child of start_node
+	
+		for each language l
+			
+			if child is not reachable using l
+			
+				prune child
+				continue pruning_children
+			
+			end if
+			
+		end for
+	
+		add child to queue
+	
+	end for
+
+end while
