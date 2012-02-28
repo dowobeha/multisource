@@ -13,13 +13,19 @@ while queue not empty
 
 	for each language l
 
-		if start_node can be legally extended in language l
-	
-			node = start_node
-	
-			for each translation option o in t[l]
+		if start_node has been previously annotated with a source l coverage vector
 		
-				if o's source l coverage vector can legally extend node
+			for each translation option o in t[l]
+	
+				node = start_node
+		
+				q = o's source l coverage vector
+		
+				from all coverage vectors stored at start_node,
+					collect the set of coverage vectors s that 
+					can be legally extended by q
+		
+				if set s is not empty
 		
 					for each target word w in o
 			
@@ -28,8 +34,14 @@ while queue not empty
 						annotate node as reachable using l
 			
 					end for
-			
-					annotate node with o's source l coverage vector
+					
+					for each coverage vector p in s		
+					
+						coverage vector r = p intersect q
+							
+						annotate node with new coverage vector r
+									
+					end for
 				
 				end if 
 		
