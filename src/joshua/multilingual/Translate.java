@@ -6,6 +6,7 @@ import java.util.Scanner;
 
 import joshua.corpus.suffix_array.ParallelCorpusGrammarFactory;
 import joshua.corpus.vocab.SymbolTable;
+import joshua.pbmt.TranslationOptions;
 import joshua.prefix_tree.ExtractRules;
 import joshua.prefix_tree.PrefixTree;
 
@@ -14,14 +15,16 @@ public class Translate {
 	private final SymbolTable vocab;
 	private final PrefixTree prefixTree;
 	private final Scanner scanner;
+	private final int maxPhraseLength;
 	
-	
-	public Translate(String joshDir, String testSet) throws IOException, ClassNotFoundException {
+	public Translate(String joshDir, String testSet, int maxPhraseLength) throws IOException, ClassNotFoundException {
+		this.maxPhraseLength = maxPhraseLength;
+		
 		ExtractRules extractRules = new ExtractRules();	
 		extractRules.setUsePrecomputedFrequentPhrases(false);
 		extractRules.setMaxNonterminals(0);
-		extractRules.setMaxPhraseLength(5);
-		extractRules.setMaxPhraseSpan(5);
+		extractRules.setMaxPhraseLength(maxPhraseLength);
+		extractRules.setMaxPhraseSpan(maxPhraseLength);
 		extractRules.setJoshDir(joshDir);
 		
 		ParallelCorpusGrammarFactory parallelCorpus = extractRules.getGrammarFactory();
@@ -44,7 +47,11 @@ public class Translate {
 		prefixTree.add(wordIDs);
 		System.out.println(sentence);
 		
-		return new ReachableTranslations(prefixTree.getTrieRoot(),wordIDs); 
+		TranslationOptions translationOptions = new TranslationOptions(prefixTree.getTrieRoot(),wordIDs,vocab,maxPhraseLength);
+		//System.out.println(translationOptions.toString());
+		System.out.println("Total number of translation options: " + translationOptions.numberOfRules());
+		
+		return new ReachableTranslations(translationOptions); 
 		
 	}
 
@@ -53,8 +60,9 @@ public class Translate {
 		
 		String joshDir = args[0];
 		String testSet = args[1];
-				
-		Translate translate = new Translate(joshDir,testSet);
+		int maxPhraseLength = 5;
+		
+		Translate translate = new Translate(joshDir,testSet,maxPhraseLength);
 		translate.processTestSet();
 		
 		System.out.println("Done");
