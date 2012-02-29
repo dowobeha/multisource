@@ -8,5 +8,10 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="src" path="/joshua.git"/>
+	<classpathentry kind="lib" path="lib/iso639.jar" sourcepath="lib/iso639.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/multisource.git/lib/iso639.jar!/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
