@@ -159,6 +159,33 @@ public class ReachableTranslations {
 				}
 			}
 			
+
+			// for each child of start_node
+			pruning_children:
+			for (Node child : startNode.children.values()) {
+			
+				// for each language l
+				for (TranslationOptions translationOptions : languages) {
+					Language sourceLanguage = translationOptions.getSourceLanguage();
+					
+					// if child is not reachable using l
+					if (! child.coverageVectors.containsKey(sourceLanguage)) {
+
+						// prune child
+						startNode.children.remove(child);
+						
+						// continue pruning_children
+						continue pruning_children;
+						
+					}
+								
+				}
+				
+				// add child to queue
+				queue.add(child);
+				
+			}
+			
 		}
 		
 	}
