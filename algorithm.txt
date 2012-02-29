@@ -17,8 +17,6 @@ while queue not empty
 		
 			for each translation option o in t[l]
 	
-				node = start_node
-		
 				q = o's source l coverage vector
 		
 				from all coverage vectors stored at start_node,
@@ -27,6 +25,8 @@ while queue not empty
 		
 				if set s is not empty
 		
+					node = start_node
+					
 					for each target word w in o
 			
 						node = expand_trie(node,w)
