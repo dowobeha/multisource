@@ -1,6 +1,10 @@
 package joshua.multilingual;
 
+import iso639.Language;
+
 import java.util.BitSet;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -19,7 +23,7 @@ public class ReachableTranslations {
 	private final class Node {
 		
 		final long id;
-		final Set<BitSet> coverageVectors;
+		final Map<Language,Set<BitSet>> coverageVectors;
 		final Map<Integer,Node> children;
 		final int depth;
 		
@@ -30,12 +34,22 @@ public class ReachableTranslations {
 		private Node(int depth) {
 			this.depth = depth;
 			id = nodeCounter.getAndIncrement();
-			coverageVectors = new HashSet<BitSet>();
+			coverageVectors = new HashMap<Language,Set<BitSet>>();
 			children = new TreeMap<Integer,Node>();
 		}
 		
-		public void annotate(BitSet coverageVector) {
-			coverageVectors.add(coverageVector);
+		public void reachable(Language sourceLanguage) {
+			if (! coverageVectors.containsKey(sourceLanguage)) {
+				coverageVectors.put(sourceLanguage, new HashSet<BitSet>());
+			}
+		}
+		
+		public void annotate(Language sourceLanguage, BitSet coverageVector) {
+			Set<BitSet> set = coverageVectors.get(sourceLanguage);
+			if (set==null) {
+				throw new Error("Bug in the code: Node.reachable should have been previously called, but was not");
+			}
+			set.add(coverageVector);
 		}
 		
 		public Node expand(int word) {
@@ -64,14 +78,18 @@ public class ReachableTranslations {
 	
 	private final AtomicLong nodeCounter;
 	
-	public ReachableTranslations(TranslationOptions translationOptions) {
+	public ReachableTranslations(Collection<TranslationOptions> languages) {
 		
 		this.nodeCounter = new AtomicLong(0);
 		
 		Queue<Node> queue = new LinkedList<Node>();
 		
 		Node root = new Node();
-		root.annotate(CoverageVector.getEmptyCoverageVector());
+		for (TranslationOptions translationOptions : languages) {
+			Language sourceLanguage = translationOptions.getSourceLanguage();
+			root.reachable(sourceLanguage);
+			root.annotate(sourceLanguage,CoverageVector.getEmptyCoverageVector());
+		}
 		
 		queue.add(root);
 
@@ -81,35 +99,63 @@ public class ReachableTranslations {
 
 			Node startNode = queue.remove();
 			
-			if (! startNode.coverageVectors.isEmpty()) {
+			// For each language
+			for (TranslationOptions translationOptions : languages) {
 				
-				for (Map.Entry<BitSet, List<Rule>> entry : translationOptions.entrySet()) {
+				Language sourceLanguage = translationOptions.getSourceLanguage();
+				Set<BitSet> coverageVectors = startNode.coverageVectors.get(sourceLanguage);
+				
+				// If start_node has been previously annotated with a source l coverage vector
+				if (! coverageVectors.isEmpty()) {
+				
+					// For each translation option
+					for (Map.Entry<BitSet, List<Rule>> entry : translationOptions.entrySet()) {
 
-					BitSet coverageVector = entry.getKey();
-					
-					extendableCoverageVectors.clear();
-					for (BitSet startVector : startNode.coverageVectors) {
-						if (! coverageVector.intersects(startVector)) {
-							extendableCoverageVectors.add(startVector);
+						// q = o's source l coverage vector
+						BitSet coverageVector = entry.getKey();
+
+						// from all coverage vectors stored at start_node,
+						// collect the set of coverage vectors s that 
+						// can be legally extended by q
+						extendableCoverageVectors.clear();
+						for (BitSet startVector : coverageVectors) {
+							if (! coverageVector.intersects(startVector)) {
+								extendableCoverageVectors.add(startVector);
+							}
 						}
-					}
-					
-					if (! extendableCoverageVectors.isEmpty()) {
-					
-						Node node = startNode;
-						
-						for (Rule rule : entry.getValue()) {
-							
-							int[] translationOption = rule.getEnglish();
-							
-							for (int targetWord : translationOption) {
-								node = node.expand(targetWord);
-								
+
+						// if set s is not empty
+						if (! extendableCoverageVectors.isEmpty()) {
+
+							Node node = startNode;
+
+							// for each target word w in o
+							for (Rule rule : entry.getValue()) {
+								int[] translationOption = rule.getEnglish();
+								for (int targetWord : translationOption) {
+									
+									// node = expand_trie(node,w)
+									node = node.expand(targetWord);
+
+									// annotate node as reachable using l
+									node.reachable(sourceLanguage);
+									
+								}
 							}
 							
-							
-						}
-					}				
+							// for each coverage vector p in s		
+							for (BitSet extendableStartVector : extendableCoverageVectors) {
+
+								// coverage vector r = p intersect q
+								BitSet extendedVector = 
+										CoverageVector.merge(extendableStartVector, coverageVector);
+								
+								// annotate node with new coverage vector r
+								node.annotate(sourceLanguage, extendedVector);
+								
+							}
+						}				
+					}
 				}
 			}
 			

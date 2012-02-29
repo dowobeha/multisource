@@ -19,13 +19,21 @@ public final class CoverageVector extends CacheLoader<int[],BitSet> {
 
 	public BitSet load(int[] coveredIndices) {
 		
-		int maxIndex = coveredIndices[coveredIndices.length-1];
-		BitSet vector = new BitSet(maxIndex);
+		int lastArrayIndex = coveredIndices.length-1;
+		BitSet vector;
 		
-		for (int index : coveredIndices) {
-			vector.set(index);
+		if (lastArrayIndex >= 0) {
+			int maxIndex = coveredIndices[coveredIndices.length-1];
+			vector = new BitSet(maxIndex);
+			
+			for (int index : coveredIndices) {
+				vector.set(index);
+			}
+			
+		} else {
+			vector = new BitSet(0);
 		}
-		
+
 		return vector;
 	}
 	
