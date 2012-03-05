@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Scanner;
+import java.util.logging.Logger;
 
 import joshua.corpus.suffix_array.ParallelCorpusGrammarFactory;
 import joshua.corpus.vocab.SymbolTable;
@@ -15,6 +16,9 @@ import joshua.prefix_tree.PrefixTree;
 
 public class Translate {
 
+	private static final Logger logger =
+			Logger.getLogger(Translate.class.getCanonicalName());
+	
 	private final SymbolTable vocab;
 	private final PrefixTree prefixTree;
 	private final Scanner scanner;
@@ -45,21 +49,27 @@ public class Translate {
 	public void processTestSet() {
 		while (scanner.hasNextLine()) {
 			TranslationOptions t = processNextSentence();
-			new ReachableTranslations(Collections.singleton(t));
+			ReachableTranslations r = new ReachableTranslations(Collections.singleton(t));
+			r.reportStats();
+			//break;
 		}
 	}
 	
-	private TranslationOptions processNextSentence() {
+	void skipNextSentence() {
+		scanner.nextLine();
+	}
+	
+	TranslationOptions processNextSentence() {
 		String sentence = scanner.nextLine();
 		String[] words = sentence.split("\\s+");
 		int[] wordIDs = vocab.addTerminals(words);
 		prefixTree.add(wordIDs);
-		System.out.println(sentence);
+		logger.info("Processing sentence:\t" + sentence);
 		
 		TranslationOptions translationOptions = 
 				new TranslationOptions(source,target,prefixTree.getTrieRoot(),wordIDs,vocab,maxPhraseLength);
 		//System.out.println(translationOptions.toString());
-		System.out.println("Total number of translation options: " + translationOptions.numberOfRules());
+		logger.info("Total number of translation options: " + translationOptions.numberOfRules());
 		
 //		return new ReachableTranslations(translationOptions); 
 		return translationOptions;
@@ -77,7 +87,7 @@ public class Translate {
 		Translate translate = new Translate(source,target,joshDir,testSet,maxPhraseLength);
 		translate.processTestSet();
 		
-		System.out.println("Done");
+		logger.info("Done");
 	}
 	
 }

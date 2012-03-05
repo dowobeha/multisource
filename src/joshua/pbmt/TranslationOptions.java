@@ -24,6 +24,7 @@ public class TranslationOptions extends AbstractMap<BitSet,List<Rule>> /*impleme
 	private final SymbolTable vocab;
 	private final Language source;
 	private final Language target;
+	private final int[] sourceSentence;
 	
 	public TranslationOptions(Language source, Language target, Trie translationGrammar, int[] sourceSentence, SymbolTable vocab, int maxPhraseLength) {
 		this.entries = new HashMap<BitSet, List<Rule>>();
@@ -31,6 +32,7 @@ public class TranslationOptions extends AbstractMap<BitSet,List<Rule>> /*impleme
 		this.vocab = vocab;
 		this.source = source;
 		this.target = target;
+		this.sourceSentence = sourceSentence;
 		
 		for (int startIndex=0, endOfSentence=sourceSentence.length-1;
 				startIndex<=endOfSentence; startIndex+=1) {
@@ -60,6 +62,14 @@ public class TranslationOptions extends AbstractMap<BitSet,List<Rule>> /*impleme
 		}
 	}
 
+	public SymbolTable getVocabulary() {
+		return this.vocab;
+	}
+	
+	public int getSourceSentenceLength() {
+		return this.sourceSentence.length;
+	}
+	
 	public Language getSourceLanguage() {
 		return this.source;
 	}
