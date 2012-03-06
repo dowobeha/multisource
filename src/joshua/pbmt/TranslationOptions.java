@@ -25,14 +25,16 @@ public class TranslationOptions extends AbstractMap<BitSet,List<Rule>> /*impleme
 	private final Language source;
 	private final Language target;
 	private final int[] sourceSentence;
+	private final int reorderingLimit;
 	
-	public TranslationOptions(Language source, Language target, Trie translationGrammar, int[] sourceSentence, SymbolTable vocab, int maxPhraseLength) {
+	public TranslationOptions(Language source, Language target, Trie translationGrammar, int[] sourceSentence, SymbolTable vocab, int maxPhraseLength, int reorderingLimit) {
 		this.entries = new HashMap<BitSet, List<Rule>>();
 		this.coverageVectors = new LinkedList<BitSet>();
 		this.vocab = vocab;
 		this.source = source;
 		this.target = target;
 		this.sourceSentence = sourceSentence;
+		this.reorderingLimit = reorderingLimit;
 		
 		for (int startIndex=0, endOfSentence=sourceSentence.length-1;
 				startIndex<=endOfSentence; startIndex+=1) {
@@ -76,6 +78,10 @@ public class TranslationOptions extends AbstractMap<BitSet,List<Rule>> /*impleme
 	
 	public Language getTargetLanguage() {
 		return this.target;
+	}
+	
+	public int getReorderingLimit() {
+		return this.reorderingLimit;
 	}
 	
 	public int numberOfRules() {

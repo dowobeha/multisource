@@ -23,11 +23,12 @@ public class Translate {
 	private final PrefixTree prefixTree;
 	private final Scanner scanner;
 	private final int maxPhraseLength;
+	private final int reorderingLimit;
 	
 	private final Language source;
 	private final Language target;
 	
-	public Translate(Language source, Language target, String joshDir, String testSet, int maxPhraseLength) throws IOException, ClassNotFoundException {
+	public Translate(Language source, Language target, String joshDir, String testSet, int maxPhraseLength, int reorderingLimit) throws IOException, ClassNotFoundException {
 		this.maxPhraseLength = maxPhraseLength;
 		this.source = source;
 		this.target = target;
@@ -44,6 +45,7 @@ public class Translate {
 		this.prefixTree = new PrefixTree(parallelCorpus);
 		
 		this.scanner = new Scanner(new File(testSet),"UTF-8");
+		this.reorderingLimit = reorderingLimit;
 	}
 	
 	public void processTestSet() {
@@ -67,7 +69,7 @@ public class Translate {
 		logger.info("Processing sentence:\t" + sentence);
 		
 		TranslationOptions translationOptions = 
-				new TranslationOptions(source,target,prefixTree.getTrieRoot(),wordIDs,vocab,maxPhraseLength);
+				new TranslationOptions(source,target,prefixTree.getTrieRoot(),wordIDs,vocab,maxPhraseLength,reorderingLimit);
 		//System.out.println(translationOptions.toString());
 		logger.info("Total number of translation options: " + translationOptions.numberOfRules());
 		
@@ -83,8 +85,9 @@ public class Translate {
 		String joshDir = args[2];
 		String testSet = args[3];
 		int maxPhraseLength = 5;
+		int reorderingLimit = 5;
 		
-		Translate translate = new Translate(source,target,joshDir,testSet,maxPhraseLength);
+		Translate translate = new Translate(source,target,joshDir,testSet,maxPhraseLength,reorderingLimit);
 		translate.processTestSet();
 		
 		logger.info("Done");

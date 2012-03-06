@@ -17,6 +17,8 @@ public class MultiMain {
 	
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		
+		int reorderingLimit = 0;
+		
 		Set<Translate> set = new HashSet<Translate>();
 		
 		Language target = iso639.Part3.get("eng");
@@ -37,7 +39,7 @@ public class MultiMain {
 			
 			int maxPhraseLength = 5;
 			
-			set.add(new Translate(source,target,joshDir,testSet,maxPhraseLength));
+			set.add(new Translate(source,target,joshDir,testSet,maxPhraseLength,reorderingLimit));
 			
 		}
 		
@@ -46,14 +48,14 @@ public class MultiMain {
 			Set<TranslationOptions> optionSet = new HashSet<TranslationOptions>();
 			
 			for (Translate translate : set) {
-				if (sentenceNumber<75) {
+				if (sentenceNumber<1) {
 					translate.skipNextSentence();
 				} else {
 					optionSet.add(translate.processNextSentence());
 				}
 			}
 			
-			if (sentenceNumber<75) {
+			if (sentenceNumber<1) {
 				continue;
 			}
 			

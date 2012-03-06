@@ -137,7 +137,7 @@ public class ReachableTranslations {
 		logger.info("Total number of leaf nodes: " + leafCounter.get());
 		logger.info("Total number of completed leaf nodes: " + completeCounter.get());
 		
-		if (logger.isLoggable(Level.FINEST)) {
+		if (logger.isLoggable(Level.FINER)) {
 			StringBuilder s = new StringBuilder();
 			for (Node node : completedChildren) {
 				s.append(node.toString());
@@ -145,7 +145,7 @@ public class ReachableTranslations {
 			}
 			s.append(completedChildren.size());
 			s.append('\n');
-			logger.finest("Complete translations:\n" + s.toString());
+			logger.finer("Complete translations:\n" + s.toString());
 		}
 	}
 	
@@ -212,6 +212,7 @@ public class ReachableTranslations {
 				
 				Language sourceLanguage = translationOptions.getSourceLanguage();
 				Set<BitSet> coverageVectors = startNode.coverageVectors.get(sourceLanguage);
+				int reorderingLimit = translationOptions.getReorderingLimit();
 				
 				// If start_node has been previously annotated with a source l coverage vector
 				if (! coverageVectors.isEmpty()) {
@@ -222,12 +223,23 @@ public class ReachableTranslations {
 						// q = o's source l coverage vector
 						BitSet coverageVector = entry.getKey();
 
+						int firstNewWordPosition = coverageVector.nextSetBit(0);
+						if (firstNewWordPosition < 0) {
+							throw new Error("Coverage vector associated with translation options is empty. This indicates a bug.");
+						}
+						
 						// from all coverage vectors stored at start_node,
 						// collect the set of coverage vectors s that 
 						// can be legally extended by q
 						extendableCoverageVectors.clear();
 						for (BitSet startVector : coverageVectors) {
-							if (! coverageVector.intersects(startVector)) {
+							int preferredNewWordPosition = startVector.nextClearBit(0);
+							// Calculate Math.abs()
+							int distortion = preferredNewWordPosition - firstNewWordPosition;
+							if (distortion < 0) {
+								distortion = -distortion;
+							}
+							if (! coverageVector.intersects(startVector) && distortion<=reorderingLimit) {
 								extendableCoverageVectors.add(startVector);
 							}
 						}
@@ -303,12 +315,18 @@ public class ReachableTranslations {
 				}
 				
 				// add child to queue
+				if (logger.isLoggable(Level.FINEST)) {
+					logger.finest("Adding to queue node " + child.id + " depth " + child.depth + ":\t" + child.toString());
+				}
 				queue.add(child);
 				
 			}
 			
 			for (Integer word : toPrune) {
-				startNode.children.remove(word);
+				Node prunedChild = startNode.children.remove(word);
+				if (logger.isLoggable(Level.FINEST)) {
+					logger.finest("Pruning node " + prunedChild.id + " depth " + prunedChild.depth + ":\t" + prunedChild.toString() + " " + vocab.getWord(word));
+				}
 				this.prunedNodeCounter.incrementAndGet();
 			}
 			
